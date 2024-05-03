@@ -1,0 +1,22 @@
+{
+  "dependencies": [
+    {
+      "name": "imgui",
+      "default-features": false,
+      "features": [
+        "glfw-binding",
+        "opengl3-binding",
+        "docking-experimental"
+      ]
+    },
+    "glfw3",
+    "glad",
+    "implot",
+    "stb",
+    "imguizmo",
+    "glm",
+    "assimp",
+    "glew"
+  ],
+  "builtin-baseline": "cb1e4728779e35c4bb60c25114a59c93b3e9be9a"
+}
