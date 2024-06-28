@@ -1,0 +1,44 @@
+/**
+ * @Author: Xia Yunkai
+ * @Date:   2024-06-26 16:30:44
+ * @Last Modified by:   Xia Yunkai
+ * @Last Modified time: 2024-06-28 14:51:46
+ */
+#include <stdint.h>
+
+#ifndef __INPUT_H__
+#define __INPUT_H__
+
+namespace basis
+{
+    class Input
+    {
+    protected:
+        Input() = default;
+
+    public:
+        Input(const Input &) = delete;
+        Input &operator=(const Input &) = delete;
+
+        inline static bool IsKeyPressed(int keycode) { return s_Instance->IsKeyPressedImpl(keycode); }
+
+        inline static bool IsMouseButtonPressed(int button) { return s_Instance->IsMouseButtonPressedImpl(button); }
+        inline static std::pair<float, float> GetMousePosition() { return s_Instance->GetMousePositionImpl(); }
+        inline static float GetMouseX() { return s_Instance->GetMouseXImpl(); }
+        inline static float GetMouseY() { return s_Instance->GetMouseYImpl(); }
+
+    protected:
+        virtual bool IsKeyPressedImpl(int keycode) = 0;
+
+        virtual bool IsMouseButtonPressedImpl(int button) = 0;
+        virtual std::pair<float, float> GetMousePositionImpl() = 0;
+        virtual float GetMouseXImpl() = 0;
+        virtual float GetMouseYImpl() = 0;
+
+    private:
+        static Input *s_Instance;
+    };
+
+}
+
+#endif /* __INPUT_H__ */

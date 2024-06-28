@@ -2,7 +2,7 @@
  * @Author: Xia Yunkai
  * @Date:   2024-04-26 23:25:39
  * @Last Modified by:   Xia Yunkai
- * @Last Modified time: 2024-05-02 00:54:12
+ * @Last Modified time: 2024-05-29 20:08:46
  */
 #include <iostream>
 
@@ -11,7 +11,9 @@
 #include "basis/defines.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
+#include "event/application_event.h"
+#include "event/key_event.h"
+#include "event/mouse_event.h"
 namespace window
 {
     Window::~Window()
@@ -57,9 +59,108 @@ namespace window
             return false;
         }
 
+		m_Data.Title = title;
+		m_Data.Height = height;
+		m_Data.Width = width;
+		SetGLFWCallbacks();
         LOG_INFO("Window InitGlfw succeeded");
         return true;
     }
+
+	void  Window::SetGLFWCallbacks()
+	{
+		glfwSetWindowUserPointer(m_handle, &m_Data);
+		glfwSwapInterval(1);
+		// Set GLFW callbacks
+		glfwSetWindowSizeCallback(m_handle, [](GLFWwindow* window, int width, int height)
+			{
+				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+				data.Width = width;
+				data.Height = height;
+
+				WindowResizeEvent event(width, height);
+				data.EventCallback(event);
+			});
+
+		glfwSetWindowCloseCallback(m_handle, [](GLFWwindow* window)
+			{
+				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+				WindowCloseEvent event;
+				data.EventCallback(event);
+			});
+
+		glfwSetKeyCallback(m_handle, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+			{
+				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+				switch (action)
+				{
+				case GLFW_PRESS:
+				{
+					KeyPressedEvent event(key, 0);
+					data.EventCallback(event);
+					break;
+				}
+				case GLFW_RELEASE:
+				{
+					KeyReleasedEvent event(key);
+					data.EventCallback(event);
+					break;
+				}
+				case GLFW_REPEAT:
+				{
+					KeyPressedEvent event(key, 1);
+					data.EventCallback(event);
+					break;
+				}
+				}
+			});
+
+		glfwSetCharCallback(m_handle, [](GLFWwindow* window, uint32_t keycode)
+			{
+				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+				KeyTypedEvent event(keycode);
+				data.EventCallback(event);
+			});
+
+		glfwSetMouseButtonCallback(m_handle, [](GLFWwindow* window, int button, int action, int mods)
+			{
+				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+				switch (action)
+				{
+				case GLFW_PRESS:
+				{
+					MouseButtonPressedEvent event(button);
+					data.EventCallback(event);
+					break;
+				}
+				case GLFW_RELEASE:
+				{
+					MouseButtonReleasedEvent event(button);
+					data.EventCallback(event);
+					break;
+				}
+				}
+			});
+
+		glfwSetScrollCallback(m_handle, [](GLFWwindow* window, double xOffset, double yOffset)
+			{
+				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+				MouseScrolledEvent event((float)xOffset, (float)yOffset);
+				data.EventCallback(event);
+			});
+
+		glfwSetCursorPosCallback(m_handle, [](GLFWwindow* window, double xPos, double yPos)
+			{
+				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+				MouseMovedEvent event((float)xPos, (float)yPos);
+				data.EventCallback(event);
+			});
+	}
 
     void Window::PrewDraw()
     {
@@ -70,7 +171,7 @@ namespace window
         }
         SetSize(size.first, size.second);
         // 默认帧率
-        WaitEventsTimeout(0.1);
+        WaitEventsTimeout(0.1f);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, m_width, m_height);
@@ -79,9 +180,10 @@ namespace window
     }
     void Window::PostDraw()
     {
+		glfwPollEvents();
         glfwSwapBuffers(m_handle);
 
-        glfwPollEvents();
+        
     }
 
     void Window::DestroyWindow()
@@ -147,4 +249,8 @@ namespace window
     {
         glfwWaitEventsTimeout(timeout);
     }
+	void Window::SetEventCallback(const EventCallbackFn& callback)
+	{
+		m_Data.EventCallback = callback;
+	}
 }

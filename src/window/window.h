@@ -2,13 +2,15 @@
  * @Author: Xia Yunkai
  * @Date:   2024-04-26 23:25:31
  * @Last Modified by:   Xia Yunkai
- * @Last Modified time: 2024-05-02 00:39:03
+ * @Last Modified time: 2024-06-27 14:59:54
  */
 
 #ifndef __WINDOW_H__
 #define __WINDOW_H__
 #include <string>
-
+#include <functional>
+#include "event/event.h"
+using namespace event;
 struct GLFWwindow;
 namespace window
 {
@@ -16,6 +18,7 @@ namespace window
     {
 
     public:
+        using EventCallbackFn = std::function<void(Event &)>;
         Window() = default;
         virtual ~Window();
         bool Init(uint32_t width, uint32_t height, const std::string &title);
@@ -33,13 +36,26 @@ namespace window
         void WaitEventsTimeout(float timeout);
         void DestroyWindow();
         void SetDropCallback(void (*fp)(GLFWwindow *window, int count, const char **paths));
+        inline void *GetNativeWindow() const { return m_handle; }
+
+		void SetEventCallback(const EventCallbackFn& callback);
+		void SetGLFWCallbacks();
 
     private:
-        GLFWwindow *m_handle = nullptr;  // 窗口句柄
-        uint32_t m_width = 500;          // 窗口宽
-        uint32_t m_height = 500;         // 窗口高
-        std::string m_title = "XvizApp"; // 窗口标题
-        float m_factor = 1.0f;           // frame_width / window_width
+        GLFWwindow *m_handle = nullptr;
+        uint32_t m_width = 500;
+        uint32_t m_height = 500;
+        std::string m_title = "XvizApp";
+        
+        struct WindowData
+        {
+            std::string Title;
+            uint32_t Width, Height;
+            bool VSync;
+
+            EventCallbackFn EventCallback;
+        };
+        WindowData m_Data;
     };
 
 }

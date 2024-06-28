@@ -1,14 +1,29 @@
 /**
  * @Author: Xia Yunkai
- * @Date:   2024-04-27 23:36:54
+ * @Date:   2024-05-28 19:11:20
  * @Last Modified by:   Xia Yunkai
- * @Last Modified time: 2024-04-29 22:18:25
+ * @Last Modified time: 2024-06-28 14:20:11
  */
-#include <stdint.h>
 
 #ifndef __DEFINES_H__
 #define __DEFINES_H__
-// 宏定义
+
+
+#define XVIZ_MAX(a, b) (((a) > (b)) ? (a) : (b))                  // maximum
+#define XVIZ_MIN(a, b) (((a) < (b)) ? (a) : (b))                  // minimum
+#define XVIZ_CLAMP(v, min, max) (XVIZ_MAX(XVIZ_MIN(v, max), min)) // clamp
+#define XVIZ_PI (3.1415926f)                                      // pi
+#define XVIZ_2PI (6.2831853f)                                     // 2*pi
+#define XVIZ_PI2 (1.5707963f)                                     // pi/2
+#define XVIZ_PI4 (0.78539815f)                                    // pi/2
+#define XVIZ_RPI (0.31831f)                                       // 1/pi
+#define XVIZ_ANG2RAD(x) ((x) * HATA_PI * 0.0055556f)              // 角度转弧度，转完后变成浮点型
+#define XVIZ_RAD2ANG(x) ((x) * HATA_RPI * 180)
+#define XVIZ_BIT(x) (1 << x)
+#define GLCORE_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
+#define NUMBERS_PI atan(1.0f)*4.f
+#define NUMBERS_ONEDEG atan(1.0f)/45.f
+
 #define CHECK_RETURN(state) \
     if (state)              \
     {                       \
@@ -40,17 +55,6 @@
         continue;                                                           \
     }
 
-#define XVIZ_MAX(a, b) (((a) > (b)) ? (a) : (b))                  // maximum
-#define XVIZ_MIN(a, b) (((a) < (b)) ? (a) : (b))                  // minimum
-#define XVIZ_CLAMP(v, min, max) (XVIZ_MAX(XVIZ_MIN(v, max), min)) // clamp
-#define XVIZ_PI (3.1415926f)                                      // pi
-#define XVIZ_2PI (6.2831853f)                                     // 2*pi
-#define XVIZ_PI2 (1.5707963f)                                     // pi/2
-#define XVIZ_PI4 (0.78539815f)                                    // pi/2
-#define XVIZ_RPI (0.31831f)                                       // 1/pi
-#define XVIZ_ANG2RAD(x) ((x) * HATA_PI * 0.0055556f)              // 角度转弧度，转完后变成浮点型
-#define XVIZ_RAD2ANG(x) ((x) * HATA_RPI * 180)
-
 #define DISALLOW_COPY_AND_ASSIGN(classname) \
 private:                                    \
     classname(const classname &);           \
@@ -71,10 +75,12 @@ public:                                       \
     DISALLOW_IMPLICIT_CONSTRUCTORS(classname) \
 private:
 
-//! 获取固定数组成员个数
+
+
 #define NUMBER_OF_ARRAY(arr) (sizeof(arr) / sizeof(*arr))
 
-//! 资源释放相关宏
+
+
 #define CHECK_DELETE_RESET_OBJ(obj) \
     do                              \
     {                               \

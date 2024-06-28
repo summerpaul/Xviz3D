@@ -1,15 +1,17 @@
 /**
  * @Author: Xia Yunkai
- * @Date:   2024-04-26 23:25:53
+ * @Date:   2024-05-28 19:08:47
  * @Last Modified by:   Xia Yunkai
- * @Last Modified time: 2024-05-03 00:31:14
+ * @Last Modified time: 2024-06-28 14:37:34
  */
-
 #include "app.h"
 #include "basis/logger.h"
-#include "basis/defines.h"
 #include "window/window.h"
-#include "ui/main_layer.h"
+#include "basis/defines.h"
+#include "layer/imgui_layer.h"
+#include "layer/layer_stack.h"
+#include <GLFW/glfw3.h>
+
 namespace app
 {
     App::~App()
@@ -26,40 +28,64 @@ namespace app
 
     bool App::Init(const std::string &title, uint32_t width, uint32_t height)
     {
-        m_window = std::make_unique<window::Window>();
-        CHECK_RETURN_RET(!m_window->Init(width, height, title), false);
-        m_mainUI = std::make_unique<ui::MainLayer>("MainLayer");
-        CHECK_RETURN_RET(!m_mainUI->Init(), false);
-        CHECK_RETURN_RET(!m_mainUI->InitHandle(m_window->GetHandle()), false);
+        m_pWindow = std::make_unique<window::Window>();
+
+        CHECK_RETURN_RET(!m_pWindow->Init(width, height, title), false);
+        m_isShutDown = false;
+        m_pImGuiLayer = new ImGuiLayer();
+        m_pLayerStack = std::make_unique<layer::LayerStack>();
+        PushOverlay(m_pImGuiLayer);
+
         LOG_INFO("APP init succeeded");
         return true;
     }
 
     void App::Run()
     {
-        // 设置窗口回调函数
-        m_window->SetDropCallback(ui::MainLayer::DropCallback);
-        while (!m_window->ShouldClose())
+        while (!m_pWindow->ShouldClose())
         {
-            m_window->PrewDraw();
-            m_mainUI->BeginDraw();
-            m_mainUI->Draw();
-            m_mainUI->EndDraw();
-            m_window->PostDraw();
-        }
-    }
+            float time = (float)glfwGetTime();
+            Timestep timestep = time - m_LastFrameTime;
+            m_LastFrameTime = time;
+            for (auto layer : *m_pLayerStack)
+            {
+                layer->OnUpdate(timestep);
+            }
 
-    void App::SetDropFiles(int count, const char **paths)
-    {
-        m_mainUI->FilesDropCallback(count, paths);
+            m_pWindow->PrewDraw();
+            m_pImGuiLayer->Begin();
+            for (auto layer : *m_pLayerStack)
+            {
+                layer->OnImGuiRender();
+            }
+            m_pImGuiLayer->End();
+
+            m_pWindow->PostDraw();
+        }
     }
 
     void App::Shutdown()
     {
-        m_mainUI->Shutdown();
-        m_window->DestroyWindow();
+        m_pWindow->DestroyWindow();
         LOG_INFO("Shutting down");
         m_isShutDown = true;
+    }
+    void *App::GetNativeWindow() const
+    {
+        return m_pWindow->GetNativeWindow();
+    }
+
+    void App::PushLayer(Layer *layer)
+    {
+        m_pLayerStack->PushLayer(layer);
+    }
+    void App::PushOverlay(Layer *layer)
+    {
+        m_pLayerStack->PushOverlay(layer);
+    }
+
+    void App::OnEvent(Event &e)
+    {
     }
 
 }
